@@ -1,0 +1,28 @@
+# Local Python environments and caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Data, checkpoints and generated outputs are distributed separately.
+datasets/
+checkpoints/
+experiments/
+outputs/
+case_study/
+batch_test/
+uq_test/
+*.pth
+*.pt
+*.ckpt
+*.state
+*.log
+
+# Local credentials and machine-specific environment files
+.env
+.env.*
+!.env.example

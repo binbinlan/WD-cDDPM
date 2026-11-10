@@ -1,0 +1,134 @@
+{
+    "name": "wd_cddpm_timeslice10m",
+    "gpu_ids": [0],
+    "seed" : 42, 
+	"finetune_norm": false,
+    "path": { 
+        "base_dir": "experiments",
+        "code": "code",
+        "tb_logger": "tb_logger",
+        "results": "results",
+        "checkpoint": "checkpoint",
+        "resume_state": null
+    },
+    "datasets": {
+        "train": { 
+            "which_dataset": {  
+                "name": ["data.flood_dataset", "FloodDataset"], 
+                "args":{
+                    "data_root": "datasets/flood/results",
+                    "skip_start": 0,
+                    "skip_end": 0,
+                    "total_samples": 6000,
+                    "rain_dir_name": "cumulative_rainfall_npy/time_slice",
+                    "expected_rain_channels": 12,
+                    "max_rain_mm": 100.0,
+                    "require_all_inputs": true
+                } 
+            },
+            "dataloader":{
+                "validation_split": 32,
+                "args":{ 
+                    "batch_size": 8, 
+                    "num_workers": 1,
+                    "shuffle": true,
+                    "pin_memory": true,
+                    "drop_last": true
+                }
+            }
+        },
+        "test": { 
+            "which_dataset": {
+                "name": ["data.flood_dataset", "FloodDataset"], 
+                "args":{
+                    "data_root": "datasets/flood/results",
+                    "skip_start": 0,
+                    "skip_end": 0,
+                    "total_samples": 6000,
+                    "rain_dir_name": "cumulative_rainfall_npy/time_slice",
+                    "expected_rain_channels": 12,
+                    "max_rain_mm": 100.0,
+                    "require_all_inputs": true
+                }
+            },
+            "dataloader":{
+                "args":{
+                    "batch_size": 4,
+                    "num_workers": 1,
+                    "pin_memory": true
+                }
+            }
+        }
+    },
+    "model": {
+        "which_model": { 
+            "name": ["models.model", "WDcDDPM"],
+            "args": {
+                "sample_num": 4, 
+                "task": "flood", 
+                "ema_scheduler": {
+                    "ema_start": 1,
+                    "ema_iter": 1,
+                    "ema_decay": 0.9999
+                },
+                "optimizers": [
+                    { "lr": 5e-5, "weight_decay": 0}
+                ]
+            }
+        }, 
+        "which_networks": [
+            {
+                "name":["models.network", "Network"], 
+                "args": { 
+                    "init_type": "kaiming", 
+                    "module_name": "guided_diffusion",
+                    "unet": {
+                        "in_channel": 15,  // DEM + slope + 12 rainfall windows + noisy depth
+                        "out_channel": 1, // 
+                        "inner_channel": 64,
+                        "channel_mults":[1, 2, 4, 8],
+                        "attn_res": [16],
+                        "num_head_channels": 32,
+                        "res_blocks": 2,
+                        "dropout": 0.2,
+                        "image_size": 256
+                    },
+                    "beta_schedule": {
+                        "train": {
+                            "schedule": "linear",
+                            "n_timestep": 2000,
+                            "linear_start": 1e-6,
+                            "linear_end": 0.01
+                        },
+                        "test": {
+                            "schedule": "linear",
+                            "n_timestep": 200,
+                            "linear_start": 1e-4,
+                            "linear_end": 0.09
+                        }
+                    },
+                    "wetdry_loss": {
+                        "enabled": true,
+                        "threshold_m": 0.05,
+                        "depth_sqrt_scale": 3.0,
+                        "logit_scale": 10.0,
+                        "lambda_bce": 0.005,
+                        "lambda_dice": 0.005,
+                        "lambda_fp": 0.02,
+                        "lambda_fn": 0.005
+                    }
+                }
+            }
+        ],
+        "which_losses": ["mse_loss"],
+        "which_metrics": ["mae"]
+    },
+    "train": { 
+        "n_epoch": 570, 
+        "n_iter": 1e8, 
+        "val_epoch": 10, // 
+        "save_checkpoint_epoch": 10,
+        "log_iter": 100, //
+        "tensorboard" : true 
+    }
+}
