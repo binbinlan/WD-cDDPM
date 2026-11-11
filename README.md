@@ -40,6 +40,26 @@ python -m pip install -r requirements.txt
 
 A CUDA-capable GPU is recommended for training and sampling. The requirements retain the source dependency ranges; they are not a pinned, independently tested environment specification. Run all commands from the repository root. No dataset or model download is triggered by the setup instructions.
 
+
+### Reference labels download
+
+The LISFLOOD-FP reference labels are shared separately and are not bundled in this code copy:
+
+- Archive: `lisflood-fp-labels.rar`
+- Baidu Netdisk: https://pan.baidu.com/s/1zAC2zLW1_uLG44jYQOPejQ?pwd=hdfp
+- Extraction code: `hdfp`
+
+After extraction, place the depth label files under the `results/` directory described below, keeping the `results_{i+1}/seed_{i+1}.max` naming expected by the dataset loader. This archive contains only the LISFLOOD-FP-generated reference cases; the Massflow-generated labels are not included here.
+
+### Pretrained checkpoint
+
+A pretrained checkpoint is shared separately and is not bundled in this code copy:
+
+- Baidu Netdisk: https://pan.baidu.com/s/1t0Hx_9e2yyr2uS55UbUG-g?pwd=2ras
+- Extraction code: `2ras`
+
+After extraction, place the files under `checkpoints/` and pass the network checkpoint path to the `--weights` argument in the single-case, batch, and ensemble inference scripts. Verify that the loaded state dictionary matches the 15-input-channel network expected by `inference_new_sample.py`, `batch_test_inference.py`, and `uq_test_single.py`.
+
 ## Input data
 
 The default dataset layout is:
